@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Education Chat for Kids</title>
+  <script type='text/javascript' src='https://cdn.scaledrone.com/scaledrone.min.js'></script>
+  <style>
+    body {
+      font-family: 'Comic Sans MS', sans-serif;
+      margin: 0;
+      padding: 20px;
+      background-color: #f4f8ff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background-color: #fff;
+      border-radius: 15px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background-color: #4caf50;
+      color: white;
+      padding: 20px;
+      text-align: center;
+      font-size: 24px;
+      font-weight: bold;
+    }
+
+    .members-count {
+      font-size: 18px;
+      padding: 15px;
+      background-color: #e8f5e9;
+      border-bottom: 2px solid #4caf50;
+    }
+
+    .members-list {
+      background-color: #f7fbfc;
+      padding: 15px;
+      max-height: 100px;
+      overflow-y: auto;
+      border-bottom: 2px solid #4caf50;
+    }
+
+    .messages {
+      flex-grow: 1;
+      padding: 15px;
+      background-color: #fefefe;
+      overflow-y: auto;
+    }
+
+    .message {
+      padding: 10px;
+      margin-bottom: 10px;
+      border-radius: 10px;
+      background-color: #e8f4ff;
+    }
+
+    .message .member {
+      font-weight: bold;
+      color: #4caf50;
+    }
+
+    .message-form {
+      display: flex;
+      padding: 15px;
+      border-top: 2px solid #4caf50;
+      background-color: #f7fbfc;
+    }
+
+    .message-form__input {
+      flex-grow: 1;
+      padding: 10px;
+      font-size: 16px;
+      border: 2px solid #4caf50;
+      border-radius: 8px;
+      margin-right: 10px;
+    }
+
+    .message-form__file {
+      margin-right: 10px;
+    }
+
+    .message-form__button {
+      background-color: #4caf50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .message-form__button:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">Education Chat for Kids</div>
+    <div class="members-count">0 members online</div>
+    <div class="members-list">No members yet</div>
+    <div class="messages"></div>
+    <form class="message-form" onsubmit="return false;">
+      <input class="message-form__input" placeholder="Type a message..." type="text">
+      <input class="message-form__file" type="file" accept="image/*">
+      <input class="message-form__button" value="Send" type="submit">
+    </form>
+  </div>
+  <script src="./script.js"></script>
+</body>
+</html>
