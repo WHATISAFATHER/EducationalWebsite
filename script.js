@@ -59,9 +59,7 @@ drone.on('open', error => {
 
   room.on('data', (text, member) => {
     if (member) {
-      addMessageToListDOM(text, member);  // Handle the incoming message
-      // Send the message to Discord
-      sendToDiscord(`${member.clientData.name}: ${text.content}`);
+      addMessageToListDOM(text, member);
     } else {
       // Message is from server
     }
@@ -106,44 +104,46 @@ DOM.form.addEventListener('submit', sendMessage);
 let canSend = true;  // Flag to control message sending
 function sendMessage(event) {
   event.preventDefault();
+  
+  console.log(canSend); // Check the value of canSend
   if (!canSend) return;  // Prevent sending if timeout hasn't passed
 
-  const message = DOM.input.value.trim();
+  const message = DOM.input.value;
   const fileInput = DOM.form.querySelector('.message-form__file');
   const file = fileInput.files[0];  // Get the selected file
 
-  if (!message && !file) {
-    console.log("No message or image to send.");
-    return;
-  }
+  // Emoji & Non-Emoji Character Limits
+  const emojiCount = (message.match(/[\p{Emoji}]/gu) || []).length;
+  const nonEmojiCount = (message.match(/[^\p{Emoji}\s]/gu) || []).length;
 
-  canSend = false; // Throttle sending
+  //⚠️settings⚠️
+  const MaxEmoji = 10;
+  const MaxNonEmoji = 800;
+  
+  if (emojiCount > 10 || nonEmojiCount > 800) return; // if more than max emoji or non emoji counts return
 
+  if (message === '' && !file) return; // Don't send an empty message or without a file
+  
+  // Set canSend to false, indicating the timeout period is active
+  canSend = false;
+
+  
   if (file) {
-    // Ensure file is an image before proceeding
-    if (!file.type.startsWith('image/')) {
-      console.error('File must be an image.');
-      canSend = true;  // Re-enable sending
-      return;
-    }
+    sendImageMessage(file);  // Send an image message
+  }
+  
 
-    // Resize and send image
-    resizeImage(file, (resizedBase64) => {
-      sendToDiscord(message || 'Image uploaded', resizedBase64);
-      sendImageMessage(file);  // Publish to Scaledrone
-    });
-  } else if (message) {
-    sendTextMessage(message);  // Send regular text
-    sendToDiscord(message);   // Forward to Discord
+  if (message) {
+    sendTextMessage(message);  // Send a text message
   }
 
-  DOM.input.value = '';  // Clear inputs
-  fileInput.value = '';
+  DOM.input.value = '';  // Clear text input
+  fileInput.value = '';   // Clear file input\
 
   // Re-enable sending after 1 second
   setTimeout(() => {
-    canSend = true;
-  }, 1000);
+    canSend = true;  // Allow message sending again after timeout
+  }, 1000); // 1-second delay before the next send
 }
 
 function sendTextMessage(text) {
@@ -156,27 +156,27 @@ function sendTextMessage(text) {
 // Function to resize the image
 function resizeImage(file, callback) {
   const reader = new FileReader();
-
+  
   reader.onloadend = function () {
     const img = new Image();
-
+    
     img.onload = function () {
       // Create an HTML canvas element
       const canvas = document.createElement('canvas');
       const ctx = canvas.getContext('2d');
-
+      
       //⚠️Settings⚠️
-      const wantHeight = 300;
+      const wantHeight = 200;
       const compression = 0.25;
 
-      // Calc Ratios
-      const ratio = img.width / img.height;
-      const widthCalc = ratio * wantHeight;
-
-      // Set Canvas Stuff
+      //Calc Ratios
+      const ratio = img.width / img.height
+      const widthCalc = ratio * wantHeight
+      
+      //Set Canvas Stuff
       canvas.width = widthCalc;
       canvas.height = wantHeight;
-
+      
       // Draw the image on the canvas, automatically resized to fit
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
 
@@ -184,16 +184,16 @@ function resizeImage(file, callback) {
       const resizedBase64 = canvas.toDataURL('image/jpeg', compression); // File type: "image/png", "image/jpeg", etc.
       callback(resizedBase64);
     };
-
+    
     img.src = reader.result;  // Set the image source to the file's data URL
   };
-
+  
   reader.readAsDataURL(file);  // Read the file as a data URL
 }
 
 // Function to send image messages after resizing
 function sendImageMessage(file) {
-  resizeImage(file, function (resizedBase64) {
+  resizeImage(file, function(resizedBase64) {
     drone.publish({
       room: 'observable-room',
       message: { type: 'image', content: resizedBase64 },
@@ -227,38 +227,4 @@ function addMessageToListDOM(text, member) {
   if (wasTop) {
     el.scrollTop = el.scrollHeight - el.clientHeight;
   }
-}
-
-// Function to send message to Discord via webhook
-const webhookURL = "https://discord.com/api/webhooks/1341949517414793307/WpGbQHA2OSkmkQ5McV9Hm79QyknLob4WD9G9r7_60UypNFp1pFuBICkEQgVDtW6pqzaI"; // Replace with your Discord webhook URL
-
-function sendToDiscord(message, imageBase64 = null) {
-  const formData = new FormData();
-  formData.append("payload_json", JSON.stringify({ content: message }));
-
-  if (imageBase64) {
-    // Convert Base64 to Blob
-    const byteString = atob(imageBase64.split(",")[1]); // Remove prefix
-    const arrayBuffer = new Uint8Array(byteString.length);
-    for (let i = 0; i < byteString.length; i++) {
-      arrayBuffer[i] = byteString.charCodeAt(i);
-    }
-    const blob = new Blob([arrayBuffer], { type: "image/jpeg" }); // Change type as needed
-    formData.append("file", blob, "image.jpg");
-  }
-
-  fetch(webhookURL, {
-    method: "POST",
-    body: formData,
-  })
-    .then((response) => {
-      if (response.ok) {
-        console.log("Message and image sent to Discord!");
-      } else {
-        console.error("Failed to send message and image to Discord:", response.statusText);
-      }
-    })
-    .catch((error) => {
-      console.error("Error sending message to Discord:", error);
-    });
 }
